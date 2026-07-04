@@ -25,6 +25,9 @@
             golangci-lint # meta-linter, CI gate (roadmap Phase 0)
             gofumpt # stricter gofmt (roadmap Phase 0)
             delve # debugger (dlv)
+            protobuf # protoc — control-stream + control-API messages (Decision #18)
+            protoc-gen-go # protobuf → Go codegen
+            protoc-gen-go-grpc # gRPC service stubs (control API, Phase 3)
           ];
         };
       });

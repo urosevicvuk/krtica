@@ -178,7 +178,7 @@ sync via GitOps. The CRD is a convenience layer — the core stays k8s-free
 Single binary: `krtica server`, `krtica agent`,
 `krtica tunnel add|list|rm|inspect`, `krtica status`. Optional kubectl
 plugin. v2: TUI and/or a small server-rendered web dashboard. Declarative
-config file (TOML/YAML) with SIGHUP hot-reload for non-k8s use.
+YAML config file with SIGHUP hot-reload for non-k8s use.
 
 ## §15 Feature ledger
 
@@ -236,6 +236,10 @@ and are omitted here.)
 11. The stability claim is proven with load-test benchmarks vs frp.
 12. ACME via library (certmagic/autocert), never hand-rolled.
 13. Coexist with Cloudflare Tunnel and Tailscale; don't replace them.
+16. Single binary with subcommands, confirmed; CLI built on cobra.
+17. Config files are YAML (k8s-world consistency; TOML rejected).
+18. Control-stream encoding is protobuf, defined in `api/`, shared with
+    the Phase 3 gRPC control API; hello carries a protocol version.
 
 ## §20 Open questions
 

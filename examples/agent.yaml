@@ -1,0 +1,7 @@
+# krtica agent (the mole) — runs behind NAT, next to the services.
+name: "homelab"
+server: "127.0.0.1:7000" # the molehill's agent listener
+token: "change-me"
+services:
+  - name: web
+    target: "127.0.0.1:3000" # any local TCP service
