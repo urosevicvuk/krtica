@@ -1,0 +1,20 @@
+# binaries (built via `go build -o bin/...`)
+/bin/
+/krtica
+
+# test & coverage artifacts
+*.test
+*.out
+coverage.html
+
+# nix / direnv
+.direnv/
+result
+
+# AI teaching demos — runnable examples, never shipped (P10, Decision #15);
+# the leading underscore also hides the dir from the go toolchain
+/_scratch/
+
+# editor noise
+.idea/
+*.swp

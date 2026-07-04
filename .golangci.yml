@@ -1,0 +1,22 @@
+# golangci-lint v2 config. Local run: `golangci-lint run` (dev shell).
+# Formatters are checked in CI via `golangci-lint fmt --diff`.
+version: "2"
+
+formatters:
+  enable:
+    - gofumpt # stricter superset of gofmt (Phase 0, roadmap §17)
+    - goimports
+
+linters:
+  # v2 "standard" default set: errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - errorlint # wrapped-error comparisons done right (%w discipline)
+    - gocritic # opinionated correctness/perf diagnostics
+    - misspell
+    - revive # style + doc-comment enforcement (see below)
+  settings:
+    revive:
+      rules:
+        # Decision #15: every exported symbol carries a doc comment.
+        - name: exported
+          severity: warning
