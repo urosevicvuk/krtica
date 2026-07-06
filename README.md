@@ -81,9 +81,9 @@ NixOS-friendly: the flake pins the entire toolchain.
 
 ```sh
 nix develop          # or `direnv allow` once
-go build ./...
-go test -race ./...
-golangci-lint run
+task --list          # all dev commands (Taskfile.yml)
+task check           # fmt + lint + race tests — the pre-commit gate
+task build           # binary → bin/krtica
 ```
 
 Design questions are settled in [docs/DESIGN.md](docs/DESIGN.md) before they

@@ -26,8 +26,10 @@
             gofumpt # stricter gofmt (roadmap Phase 0)
             delve # debugger (dlv)
             protobuf # protoc — control-stream + control-API messages (Decision #18)
+            protols # proto LSP server
             protoc-gen-go # protobuf → Go codegen
             protoc-gen-go-grpc # gRPC service stubs (control API, Phase 3)
+            go-task # task runner (Taskfile.yml); `task check` = pre-commit gate
           ];
         };
       });

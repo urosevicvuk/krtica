@@ -1,0 +1,57 @@
+# Task runner (go-task). `task --list` shows this menu; `task check` is
+# the pre-commit gate and mirrors what CI runs.
+version: "3"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  build:
+    desc: Build the krtica binary into bin/
+    cmds:
+      - go build -o bin/krtica ./cmd/krtica
+
+  test:
+    desc: Run all tests with the race detector, uncached
+    cmds:
+      - go test -race -count=1 ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run
+
+  fmt:
+    desc: Apply gofumpt/goimports via golangci-lint
+    cmds:
+      - golangci-lint fmt
+
+  proto:
+    desc: Regenerate Go code from api/*.proto
+    cmds:
+      - protoc --go_out=. --go_opt=module=github.com/urosevicvuk/krtica api/control.proto
+
+  check:
+    desc: Format, lint, and test — run before every commit
+    cmds:
+      - task: fmt
+      - task: lint
+      - task: test
+
+  run:server:
+    desc: Run a local server with the example config
+    cmds:
+      - go run ./cmd/krtica server -c config-examples/server.yaml
+
+  run:agent:
+    desc: Run a local agent with the example config
+    cmds:
+      - go run ./cmd/krtica agent -c config-examples/agent.yaml
+
+  clean:
+    desc: Remove build artifacts
+    cmds:
+      - rm -rf bin/ main
