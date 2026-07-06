@@ -6,7 +6,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.1
-// source: control.proto
+// source: api/control.proto
 
 package pb
 
@@ -42,7 +42,7 @@ type Hello struct {
 
 func (x *Hello) Reset() {
 	*x = Hello{}
-	mi := &file_control_proto_msgTypes[0]
+	mi := &file_api_control_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -54,7 +54,7 @@ func (x *Hello) String() string {
 func (*Hello) ProtoMessage() {}
 
 func (x *Hello) ProtoReflect() protoreflect.Message {
-	mi := &file_control_proto_msgTypes[0]
+	mi := &file_api_control_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -67,7 +67,7 @@ func (x *Hello) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Hello.ProtoReflect.Descriptor instead.
 func (*Hello) Descriptor() ([]byte, []int) {
-	return file_control_proto_rawDescGZIP(), []int{0}
+	return file_api_control_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Hello) GetProtocolVersion() uint32 {
@@ -110,7 +110,7 @@ type HelloAck struct {
 
 func (x *HelloAck) Reset() {
 	*x = HelloAck{}
-	mi := &file_control_proto_msgTypes[1]
+	mi := &file_api_control_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -122,7 +122,7 @@ func (x *HelloAck) String() string {
 func (*HelloAck) ProtoMessage() {}
 
 func (x *HelloAck) ProtoReflect() protoreflect.Message {
-	mi := &file_control_proto_msgTypes[1]
+	mi := &file_api_control_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -135,7 +135,7 @@ func (x *HelloAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HelloAck.ProtoReflect.Descriptor instead.
 func (*HelloAck) Descriptor() ([]byte, []int) {
-	return file_control_proto_rawDescGZIP(), []int{1}
+	return file_api_control_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *HelloAck) GetOk() bool {
@@ -164,7 +164,7 @@ type StreamHeader struct {
 
 func (x *StreamHeader) Reset() {
 	*x = StreamHeader{}
-	mi := &file_control_proto_msgTypes[2]
+	mi := &file_api_control_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -176,7 +176,7 @@ func (x *StreamHeader) String() string {
 func (*StreamHeader) ProtoMessage() {}
 
 func (x *StreamHeader) ProtoReflect() protoreflect.Message {
-	mi := &file_control_proto_msgTypes[2]
+	mi := &file_api_control_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -189,7 +189,7 @@ func (x *StreamHeader) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamHeader.ProtoReflect.Descriptor instead.
 func (*StreamHeader) Descriptor() ([]byte, []int) {
-	return file_control_proto_rawDescGZIP(), []int{2}
+	return file_api_control_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *StreamHeader) GetService() string {
@@ -199,11 +199,11 @@ func (x *StreamHeader) GetService() string {
 	return ""
 }
 
-var File_control_proto protoreflect.FileDescriptor
+var File_api_control_proto protoreflect.FileDescriptor
 
-const file_control_proto_rawDesc = "" +
+const file_api_control_proto_rawDesc = "" +
 	"\n" +
-	"\rcontrol.proto\x12\tkrtica.v1\"\x83\x01\n" +
+	"\x11api/control.proto\x12\tkrtica.v1\"\x83\x01\n" +
 	"\x05Hello\x12)\n" +
 	"\x10protocol_version\x18\x01 \x01(\rR\x0fprotocolVersion\x12\x1d\n" +
 	"\n" +
@@ -214,27 +214,27 @@ const file_control_proto_rawDesc = "" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\"(\n" +
 	"\fStreamHeader\x12\x18\n" +
-	"\aservice\x18\x01 \x01(\tR\aserviceB1Z/github.com/urosevicvuk/krtica/internal/proto/pbb\x06proto3"
+	"\aservice\x18\x01 \x01(\tR\aserviceB0Z.github.com/urosevicvuk/krtica/internal/wire/pbb\x06proto3"
 
 var (
-	file_control_proto_rawDescOnce sync.Once
-	file_control_proto_rawDescData []byte
+	file_api_control_proto_rawDescOnce sync.Once
+	file_api_control_proto_rawDescData []byte
 )
 
-func file_control_proto_rawDescGZIP() []byte {
-	file_control_proto_rawDescOnce.Do(func() {
-		file_control_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_control_proto_rawDesc), len(file_control_proto_rawDesc)))
+func file_api_control_proto_rawDescGZIP() []byte {
+	file_api_control_proto_rawDescOnce.Do(func() {
+		file_api_control_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_control_proto_rawDesc), len(file_api_control_proto_rawDesc)))
 	})
-	return file_control_proto_rawDescData
+	return file_api_control_proto_rawDescData
 }
 
-var file_control_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_control_proto_goTypes = []any{
+var file_api_control_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_api_control_proto_goTypes = []any{
 	(*Hello)(nil),        // 0: krtica.v1.Hello
 	(*HelloAck)(nil),     // 1: krtica.v1.HelloAck
 	(*StreamHeader)(nil), // 2: krtica.v1.StreamHeader
 }
-var file_control_proto_depIdxs = []int32{
+var file_api_control_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -242,26 +242,26 @@ var file_control_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_control_proto_init() }
-func file_control_proto_init() {
-	if File_control_proto != nil {
+func init() { file_api_control_proto_init() }
+func file_api_control_proto_init() {
+	if File_api_control_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_control_proto_rawDesc), len(file_control_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_control_proto_rawDesc), len(file_api_control_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_control_proto_goTypes,
-		DependencyIndexes: file_control_proto_depIdxs,
-		MessageInfos:      file_control_proto_msgTypes,
+		GoTypes:           file_api_control_proto_goTypes,
+		DependencyIndexes: file_api_control_proto_depIdxs,
+		MessageInfos:      file_api_control_proto_msgTypes,
 	}.Build()
-	File_control_proto = out.File
-	file_control_proto_goTypes = nil
-	file_control_proto_depIdxs = nil
+	File_api_control_proto = out.File
+	file_api_control_proto_goTypes = nil
+	file_api_control_proto_depIdxs = nil
 }

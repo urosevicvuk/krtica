@@ -12,9 +12,9 @@ import (
 
 	"github.com/urosevicvuk/krtica/internal/config"
 	"github.com/urosevicvuk/krtica/internal/forward"
-	"github.com/urosevicvuk/krtica/internal/proto"
-	"github.com/urosevicvuk/krtica/internal/proto/pb"
-	"github.com/urosevicvuk/krtica/internal/transport"
+	"github.com/urosevicvuk/krtica/internal/tunnel"
+	"github.com/urosevicvuk/krtica/internal/wire"
+	"github.com/urosevicvuk/krtica/internal/wire/pb"
 )
 
 const (
@@ -58,16 +58,16 @@ func (a *Agent) Run(ctx context.Context) error {
 		return fmt.Errorf("agent: handshake: %w", err)
 	}
 
-	tr, err := transport.NewYamuxClient(conn)
+	tun, err := tunnel.NewYamuxClient(conn)
 	if err != nil {
 		_ = conn.Close()
 		return err
 	}
-	defer func() { _ = tr.Close() }()
+	defer func() { _ = tun.Close() }()
 	a.log.Info("tunnel established", "server", a.cfg.Server)
 
 	for {
-		stream, err := tr.AcceptStream(ctx)
+		stream, err := tun.AcceptStream(ctx)
 		if err != nil {
 			if ctx.Err() != nil {
 				return nil
@@ -91,16 +91,16 @@ func (a *Agent) handshake(conn net.Conn) error {
 		services = append(services, name)
 	}
 	hello := &pb.Hello{
-		ProtocolVersion: proto.ProtocolVersion,
+		ProtocolVersion: wire.ProtocolVersion,
 		AgentName:       a.cfg.Name,
 		Token:           a.cfg.Token,
 		Services:        services,
 	}
-	if err := proto.WriteFrame(conn, hello); err != nil {
+	if err := wire.WriteFrame(conn, hello); err != nil {
 		return err
 	}
 	var ack pb.HelloAck
-	if err := proto.ReadFrame(conn, &ack); err != nil {
+	if err := wire.ReadFrame(conn, &ack); err != nil {
 		return err
 	}
 	if !ack.Ok {
@@ -117,7 +117,7 @@ func (a *Agent) serveStream(stream net.Conn) {
 		return
 	}
 	var hdr pb.StreamHeader
-	if err := proto.ReadFrame(stream, &hdr); err != nil {
+	if err := wire.ReadFrame(stream, &hdr); err != nil {
 		a.log.Warn("bad stream header", "err", err)
 		_ = stream.Close()
 		return

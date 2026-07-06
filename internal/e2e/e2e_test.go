@@ -84,9 +84,9 @@ func TestTCPTunnelEndToEnd(t *testing.T) {
 	publicPort := freePort(t)
 
 	srvCfg := &config.Server{
-		Listen: fmt.Sprintf("127.0.0.1:%d", agentPort),
-		Token:  "test-token",
-		Tunnels: []config.Tunnel{
+		AgentListen: fmt.Sprintf("127.0.0.1:%d", agentPort),
+		Token:       "test-token",
+		Routes: []config.Route{
 			{Name: "echo", Listen: fmt.Sprintf("127.0.0.1:%d", publicPort)},
 		},
 	}
@@ -158,8 +158,8 @@ func TestBadTokenRejected(t *testing.T) {
 
 	agentPort := freePort(t)
 	srvCfg := &config.Server{
-		Listen: fmt.Sprintf("127.0.0.1:%d", agentPort),
-		Token:  "right-token",
+		AgentListen: fmt.Sprintf("127.0.0.1:%d", agentPort),
+		Token:       "right-token",
 	}
 	go func() { _ = server.New(srvCfg, log).Run(ctx) }()
 

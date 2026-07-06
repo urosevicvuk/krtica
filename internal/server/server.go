@@ -16,9 +16,9 @@ import (
 
 	"github.com/urosevicvuk/krtica/internal/config"
 	"github.com/urosevicvuk/krtica/internal/forward"
-	"github.com/urosevicvuk/krtica/internal/proto"
-	"github.com/urosevicvuk/krtica/internal/proto/pb"
-	"github.com/urosevicvuk/krtica/internal/transport"
+	"github.com/urosevicvuk/krtica/internal/tunnel"
+	"github.com/urosevicvuk/krtica/internal/wire"
+	"github.com/urosevicvuk/krtica/internal/wire/pb"
 )
 
 const handshakeTimeout = 10 * time.Second
@@ -30,18 +30,18 @@ type Server struct {
 	log *slog.Logger
 
 	mu sync.Mutex
-	// agents maps advertised service name → the transport of the agent
-	// that advertised it. Phase 1: last agent to advertise wins; edge LB
-	// across duplicates arrives in Phase 3 (§7).
-	agents map[string]transport.Transport
+	// backends maps advertised service name → the tunnel of the agent
+	// that advertised it. Phase 1: one backend per service, last agent to
+	// advertise wins; edge LB across duplicates arrives in Phase 3 (§7).
+	backends map[string]tunnel.Tunnel
 }
 
 // New builds a Server from validated config.
 func New(cfg *config.Server, log *slog.Logger) *Server {
 	return &Server{
-		cfg:    cfg,
-		log:    log,
-		agents: make(map[string]transport.Transport),
+		cfg:      cfg,
+		log:      log,
+		backends: make(map[string]tunnel.Tunnel),
 	}
 }
 
@@ -51,7 +51,7 @@ func (s *Server) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	agentLn, err := tls.Listen("tcp", s.cfg.Listen, tlsCfg)
+	agentLn, err := tls.Listen("tcp", s.cfg.AgentListen, tlsCfg)
 	if err != nil {
 		return fmt.Errorf("server: listen for agents: %w", err)
 	}
@@ -60,20 +60,20 @@ func (s *Server) Run(ctx context.Context) error {
 	var wg sync.WaitGroup
 	lns := []net.Listener{agentLn}
 
-	for _, tn := range s.cfg.Tunnels {
-		ln, err := net.Listen("tcp", tn.Listen)
+	for _, rt := range s.cfg.Routes {
+		ln, err := net.Listen("tcp", rt.Listen)
 		if err != nil {
 			closeAll(lns)
-			return fmt.Errorf("server: listen %s for tunnel %q: %w", tn.Listen, tn.Name, err)
+			return fmt.Errorf("server: listen %s for route %q: %w", rt.Listen, rt.Name, err)
 		}
 		lns = append(lns, ln)
-		s.log.Info("public listener up", "tunnel", tn.Name, "addr", ln.Addr().String())
+		s.log.Info("public listener up", "route", rt.Name, "addr", ln.Addr().String())
 
 		wg.Add(1)
-		go func(tn config.Tunnel, ln net.Listener) {
+		go func(rt config.Route, ln net.Listener) {
 			defer wg.Done()
-			s.acceptPublic(ctx, tn, ln)
-		}(tn, ln)
+			s.acceptPublic(ctx, rt, ln)
+		}(rt, ln)
 	}
 
 	wg.Add(1)
@@ -117,24 +117,24 @@ func (s *Server) handleAgent(ctx context.Context, conn net.Conn) {
 	}
 	log = log.With("agent", hello.AgentName)
 
-	tr, err := transport.NewYamuxServer(conn)
+	tun, err := tunnel.NewYamuxServer(conn)
 	if err != nil {
 		log.Error("mux setup failed", "err", err)
 		_ = conn.Close()
 		return
 	}
 
-	s.register(hello.Services, tr)
+	s.register(hello.Services, tun)
 	log.Info("agent connected", "services", hello.Services)
 
 	// Block until the tunnel dies: the agent opens no streams toward us
 	// in Phase 1, so the first Accept result signals session end.
-	_, err = tr.AcceptStream(ctx)
-	if err != nil && !errors.Is(err, transport.ErrClosed) && ctx.Err() == nil {
+	_, err = tun.AcceptStream(ctx)
+	if err != nil && !errors.Is(err, tunnel.ErrClosed) && ctx.Err() == nil {
 		log.Warn("tunnel closed", "err", err)
 	}
-	s.unregister(hello.Services, tr)
-	_ = tr.Close()
+	s.unregister(hello.Services, tun)
+	_ = tun.Close()
 	log.Info("agent disconnected")
 }
 
@@ -148,83 +148,83 @@ func (s *Server) handshake(conn net.Conn) (*pb.Hello, error) {
 	defer func() { _ = conn.SetDeadline(time.Time{}) }()
 
 	var hello pb.Hello
-	if err := proto.ReadFrame(conn, &hello); err != nil {
+	if err := wire.ReadFrame(conn, &hello); err != nil {
 		return nil, err
 	}
-	if hello.ProtocolVersion != proto.ProtocolVersion {
-		_ = proto.WriteFrame(conn, &pb.HelloAck{Error: "unsupported protocol version"})
-		return nil, fmt.Errorf("protocol version %d, want %d", hello.ProtocolVersion, proto.ProtocolVersion)
+	if hello.ProtocolVersion != wire.ProtocolVersion {
+		_ = wire.WriteFrame(conn, &pb.HelloAck{Error: "unsupported protocol version"})
+		return nil, fmt.Errorf("protocol version %d, want %d", hello.ProtocolVersion, wire.ProtocolVersion)
 	}
 	if subtle.ConstantTimeCompare([]byte(hello.Token), []byte(s.cfg.Token)) != 1 {
-		_ = proto.WriteFrame(conn, &pb.HelloAck{Error: "invalid token"})
+		_ = wire.WriteFrame(conn, &pb.HelloAck{Error: "invalid token"})
 		return nil, errors.New("invalid token")
 	}
-	if err := proto.WriteFrame(conn, &pb.HelloAck{Ok: true}); err != nil {
+	if err := wire.WriteFrame(conn, &pb.HelloAck{Ok: true}); err != nil {
 		return nil, err
 	}
 	return &hello, nil
 }
 
-func (s *Server) register(services []string, tr transport.Transport) {
+func (s *Server) register(services []string, tun tunnel.Tunnel) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, name := range services {
-		s.agents[name] = tr
+		s.backends[name] = tun
 	}
 }
 
-// unregister removes services only if they still point at tr, so a
+// unregister removes backends only if they still point at tun, so a
 // reconnected agent's fresh registration is never torn down by the old
 // tunnel's cleanup.
-func (s *Server) unregister(services []string, tr transport.Transport) {
+func (s *Server) unregister(services []string, tun tunnel.Tunnel) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, name := range services {
-		if s.agents[name] == tr {
-			delete(s.agents, name)
+		if s.backends[name] == tun {
+			delete(s.backends, name)
 		}
 	}
 }
 
-func (s *Server) lookup(service string) (transport.Transport, bool) {
+func (s *Server) lookup(service string) (tunnel.Tunnel, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	tr, ok := s.agents[service]
-	return tr, ok
+	tun, ok := s.backends[service]
+	return tun, ok
 }
 
-// acceptPublic accepts visitors on one tunnel's public listener.
-func (s *Server) acceptPublic(ctx context.Context, tn config.Tunnel, ln net.Listener) {
+// acceptPublic accepts visitors on one route's public listener.
+func (s *Server) acceptPublic(ctx context.Context, rt config.Route, ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			if ctx.Err() != nil {
 				return
 			}
-			s.log.Error("public accept failed", "tunnel", tn.Name, "err", err)
+			s.log.Error("public accept failed", "route", rt.Name, "err", err)
 			return
 		}
-		go s.servePublic(ctx, tn, conn)
+		go s.servePublic(ctx, rt, conn)
 	}
 }
 
-// servePublic routes one public connection: find the agent advertising
-// the service, open a stream, send the header, splice.
-func (s *Server) servePublic(ctx context.Context, tn config.Tunnel, conn net.Conn) {
-	tr, ok := s.lookup(tn.Name)
+// servePublic routes one public connection: find the backend serving the
+// route's service, open a stream, send the header, splice.
+func (s *Server) servePublic(ctx context.Context, rt config.Route, conn net.Conn) {
+	tun, ok := s.lookup(rt.Name)
 	if !ok {
-		s.log.Warn("no agent for tunnel", "tunnel", tn.Name)
+		s.log.Warn("no backend for route", "route", rt.Name)
 		_ = conn.Close()
 		return
 	}
-	stream, err := tr.OpenStream(ctx)
+	stream, err := tun.OpenStream(ctx)
 	if err != nil {
-		s.log.Warn("open stream failed", "tunnel", tn.Name, "err", err)
+		s.log.Warn("open stream failed", "route", rt.Name, "err", err)
 		_ = conn.Close()
 		return
 	}
-	if err := proto.WriteFrame(stream, &pb.StreamHeader{Service: tn.Name}); err != nil {
-		s.log.Warn("stream header failed", "tunnel", tn.Name, "err", err)
+	if err := wire.WriteFrame(stream, &pb.StreamHeader{Service: rt.Name}); err != nil {
+		s.log.Warn("stream header failed", "route", rt.Name, "err", err)
 		_ = stream.Close()
 		_ = conn.Close()
 		return

@@ -1,7 +1,7 @@
-// Package proto carries krtica's control-plane messages: protobuf types
+// Package wire carries krtica's control-plane messages: protobuf types
 // generated into pb (Decision #18) plus the length-prefixed framing that
 // delimits them on a byte stream.
-package proto
+package wire
 
 import (
 	"encoding/binary"
@@ -23,14 +23,14 @@ const MaxFrameSize = 1 << 20
 
 // ErrFrameTooLarge is returned when a peer announces a frame above
 // MaxFrameSize.
-var ErrFrameTooLarge = errors.New("proto: frame exceeds maximum size")
+var ErrFrameTooLarge = errors.New("wire: frame exceeds maximum size")
 
 // WriteFrame marshals msg and writes it as one length-prefixed frame
 // (4-byte big-endian length, then the protobuf bytes).
 func WriteFrame(w io.Writer, msg proto.Message) error {
 	b, err := proto.Marshal(msg)
 	if err != nil {
-		return fmt.Errorf("proto: marshal: %w", err)
+		return fmt.Errorf("wire: marshal: %w", err)
 	}
 	if len(b) > MaxFrameSize {
 		return ErrFrameTooLarge
@@ -38,10 +38,10 @@ func WriteFrame(w io.Writer, msg proto.Message) error {
 	var hdr [4]byte
 	binary.BigEndian.PutUint32(hdr[:], uint32(len(b)))
 	if _, err := w.Write(hdr[:]); err != nil {
-		return fmt.Errorf("proto: write frame header: %w", err)
+		return fmt.Errorf("wire: write frame header: %w", err)
 	}
 	if _, err := w.Write(b); err != nil {
-		return fmt.Errorf("proto: write frame body: %w", err)
+		return fmt.Errorf("wire: write frame body: %w", err)
 	}
 	return nil
 }
@@ -51,7 +51,7 @@ func WriteFrame(w io.Writer, msg proto.Message) error {
 func ReadFrame(r io.Reader, msg proto.Message) error {
 	var hdr [4]byte
 	if _, err := io.ReadFull(r, hdr[:]); err != nil {
-		return fmt.Errorf("proto: read frame header: %w", err)
+		return fmt.Errorf("wire: read frame header: %w", err)
 	}
 	n := binary.BigEndian.Uint32(hdr[:])
 	if n > MaxFrameSize {
@@ -59,10 +59,10 @@ func ReadFrame(r io.Reader, msg proto.Message) error {
 	}
 	b := make([]byte, n)
 	if _, err := io.ReadFull(r, b); err != nil {
-		return fmt.Errorf("proto: read frame body: %w", err)
+		return fmt.Errorf("wire: read frame body: %w", err)
 	}
 	if err := proto.Unmarshal(b, msg); err != nil {
-		return fmt.Errorf("proto: unmarshal: %w", err)
+		return fmt.Errorf("wire: unmarshal: %w", err)
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-package transport
+package tunnel
 
 import (
 	"context"
@@ -18,15 +18,15 @@ type Yamux struct {
 	sess *yamux.Session
 }
 
-var _ Transport = (*Yamux)(nil)
+var _ Tunnel = (*Yamux)(nil)
 
 // NewYamuxClient wraps conn as the dialing (agent) side of a tunnel.
 // The caller retains responsibility for dial, TLS, and auth (§3.4); conn
-// must be ready to carry traffic. Closing the transport closes conn.
+// must be ready to carry traffic. Closing the tunnel closes conn.
 func NewYamuxClient(conn net.Conn) (*Yamux, error) {
 	sess, err := yamux.Client(conn, yamuxConfig())
 	if err != nil {
-		return nil, fmt.Errorf("transport: yamux client: %w", err)
+		return nil, fmt.Errorf("tunnel: yamux client: %w", err)
 	}
 	return &Yamux{sess: sess}, nil
 }
@@ -35,7 +35,7 @@ func NewYamuxClient(conn net.Conn) (*Yamux, error) {
 func NewYamuxServer(conn net.Conn) (*Yamux, error) {
 	sess, err := yamux.Server(conn, yamuxConfig())
 	if err != nil {
-		return nil, fmt.Errorf("transport: yamux server: %w", err)
+		return nil, fmt.Errorf("tunnel: yamux server: %w", err)
 	}
 	return &Yamux{sess: sess}, nil
 }
@@ -88,10 +88,10 @@ func (t *Yamux) Close() error {
 }
 
 // mapErr translates yamux errors into this package's sentinels so callers
-// only ever branch on Transport's documented errors, never on yamux's.
+// only ever branch on Tunnel's documented errors, never on yamux's.
 func mapErr(op string, err error) error {
 	if errors.Is(err, yamux.ErrSessionShutdown) {
-		return fmt.Errorf("transport: %s: %w", op, ErrClosed)
+		return fmt.Errorf("tunnel: %s: %w", op, ErrClosed)
 	}
-	return fmt.Errorf("transport: %s: %w", op, err)
+	return fmt.Errorf("tunnel: %s: %w", op, err)
 }

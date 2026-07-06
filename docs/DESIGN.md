@@ -94,9 +94,9 @@ hashicorp/yamux, not a custom muxer — Decision #3). Optional carrier (v2):
 **QUIC** — sidesteps TCP-over-TCP on lossy paths and provides unreliable
 datagrams, the semantically correct UDP carrier (§8.2).
 
-**§4.3 Transport interface:** `OpenStream`, `AcceptStream`, `SendDatagram`,
+**§4.3 Tunnel interface:** `OpenStream`, `AcceptStream`, `SendDatagram`,
 `RecvDatagram`, `Close` — carriers are swappable without touching router or
-forwarder. Implemented in `internal/transport`.
+forwarder. Implemented in `internal/tunnel`.
 
 ## §5 Multiplexing & streams
 
@@ -152,7 +152,7 @@ tunnels pass encrypted bytes through untouched.
 
 ## §11 Control API
 
-gRPC (primary) + REST (convenience): `TunnelAdd/Remove/List/Inspect`,
+gRPC (primary) + REST (convenience): `RouteAdd/Remove/List/Inspect`,
 `AgentList`, `Status`, and a `Watch` stream. CLI, TUI, and the CRD
 controller are all clients of this one API. Privileged: token/mTLS-gated,
 never exposed on public data listeners.
@@ -176,7 +176,7 @@ sync via GitOps. The CRD is a convenience layer — the core stays k8s-free
 ## §14 Client surface
 
 Single binary: `krtica server`, `krtica agent`,
-`krtica tunnel add|list|rm|inspect`, `krtica status`. Optional kubectl
+`krtica route add|list|rm|inspect`, `krtica status`. Optional kubectl
 plugin. v2: TUI and/or a small server-rendered web dashboard. Declarative
 YAML config file with SIGHUP hot-reload for non-k8s use.
 
@@ -240,6 +240,17 @@ and are omitted here.)
 17. Config files are YAML (k8s-world consistency; TOML rejected).
 18. Control-stream encoding is protobuf, defined in `api/`, shared with
     the Phase 3 gRPC control API; hello carries a protocol version.
+19. Terminology locked, Gateway-API-aligned: **tunnel** = the one
+    persistent agent↔server connection (the `Tunnel` interface,
+    `internal/tunnel`); **route** = a public-ingress rule mapping a
+    listener to a service name (was `config.Tunnel`; control-API verbs
+    become `RouteAdd`/`RouteRemove`/…); **service** = a named local
+    target an agent advertises; **backend** = a live (agent, service)
+    registry entry the router picks among; **visitor** = a public
+    client. "Agent"/"server" stay (a rename to "client" would collide
+    with visitors; mole/molehill remain doc-level metaphor, never
+    identifiers). Wire framing lives in `internal/wire` (was
+    `internal/proto`, which collided with protobuf's own package name).
 
 ## §20 Open questions
 

@@ -68,10 +68,10 @@ Deliberate non-goals, so the lane stays sharp:
 
 | Phase | Delivers | Milestone |
 |---|---|---|
-| 0 | Recon, scaffold, `Transport` seam, CI | done |
+| 0 | Recon, scaffold, `Tunnel` carrier seam, CI | done |
 | 1 | Core TCP tunnel: TLS, token auth, yamux | one homelab TCP port exposed publicly |
 | 2 | Robustness + UDP + PROXY protocol | survives connection storms; forwards UDP |
-| 3 | Dynamic control API, multi-service, edge LB | add/remove tunnels live, failover across agents |
+| 3 | Dynamic control API, multi-service, edge LB | add/remove routes live, failover across agents |
 | 4 | L7: SNI routing, ACME auto-TLS, access control | many HTTPS services sharing :443 |
 | 5 | `Tunnel` CRD, QUIC transport, observability | tunnels as GitOps objects, visible in Grafana |
 

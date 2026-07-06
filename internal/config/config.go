@@ -13,17 +13,17 @@ import (
 
 // Server configures `krtica server` (the molehill).
 type Server struct {
-	// Listen is the address agents dial, e.g. ":7000".
-	Listen string `yaml:"listen"`
+	// AgentListen is the address agents dial, e.g. ":7000".
+	AgentListen string `yaml:"agent_listen"`
 	// Token authenticates agents (P8: mandatory, no anonymous tunnels).
 	Token string `yaml:"token"`
-	// Tunnels maps public listeners to advertised service names.
-	Tunnels []Tunnel `yaml:"tunnels"`
+	// Routes maps public listeners to advertised service names.
+	Routes []Route `yaml:"routes"`
 }
 
-// Tunnel is one public exposure: a listen address routed to a service
-// advertised by a connected agent.
-type Tunnel struct {
+// Route is one public-ingress rule: a listen address routed to a service
+// advertised by a connected agent (Decision #19).
+type Route struct {
 	Name   string `yaml:"name"`
 	Listen string `yaml:"listen"`
 }
@@ -51,15 +51,15 @@ func LoadServer(path string) (*Server, error) {
 	if err := load(path, &cfg); err != nil {
 		return nil, err
 	}
-	if cfg.Listen == "" {
-		return nil, fmt.Errorf("config %s: listen is required", path)
+	if cfg.AgentListen == "" {
+		return nil, fmt.Errorf("config %s: agent_listen is required", path)
 	}
 	if cfg.Token == "" {
 		return nil, fmt.Errorf("config %s: token is required", path)
 	}
-	for i, tn := range cfg.Tunnels {
-		if tn.Name == "" || tn.Listen == "" {
-			return nil, fmt.Errorf("config %s: tunnels[%d] needs name and listen", path, i)
+	for i, rt := range cfg.Routes {
+		if rt.Name == "" || rt.Listen == "" {
+			return nil, fmt.Errorf("config %s: routes[%d] needs name and listen", path, i)
 		}
 	}
 	return &cfg, nil

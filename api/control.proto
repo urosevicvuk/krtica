@@ -5,7 +5,7 @@ syntax = "proto3";
 
 package krtica.v1;
 
-option go_package = "github.com/urosevicvuk/krtica/internal/proto/pb";
+option go_package = "github.com/urosevicvuk/krtica/internal/wire/pb";
 
 // Hello is the agent's opening message: authenticate and advertise the
 // services this agent can reach locally.

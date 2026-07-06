@@ -1,4 +1,4 @@
-package transport
+package tunnel
 
 import (
 	"bytes"
@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-// pipeTransports returns a connected client/server pair over an in-memory
+// pipeTunnels returns a connected client/server pair over an in-memory
 // pipe, torn down automatically when the test finishes.
-func pipeTransports(t *testing.T) (client, server *Yamux) {
+func pipeTunnels(t *testing.T) (client, server *Yamux) {
 	t.Helper()
 	c1, c2 := net.Pipe()
 	client, err := NewYamuxClient(c1)
@@ -31,7 +31,7 @@ func pipeTransports(t *testing.T) (client, server *Yamux) {
 }
 
 func TestYamuxStreamRoundTrip(t *testing.T) {
-	client, server := pipeTransports(t)
+	client, server := pipeTunnels(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -71,7 +71,7 @@ func TestYamuxStreamRoundTrip(t *testing.T) {
 }
 
 func TestYamuxAcceptHonorsContext(t *testing.T) {
-	_, server := pipeTransports(t)
+	_, server := pipeTunnels(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
@@ -82,7 +82,7 @@ func TestYamuxAcceptHonorsContext(t *testing.T) {
 }
 
 func TestYamuxClosedSemantics(t *testing.T) {
-	client, _ := pipeTransports(t)
+	client, _ := pipeTunnels(t)
 	ctx := context.Background()
 
 	if err := client.Close(); err != nil {
@@ -100,7 +100,7 @@ func TestYamuxClosedSemantics(t *testing.T) {
 }
 
 func TestYamuxDatagramsUnsupported(t *testing.T) {
-	client, _ := pipeTransports(t)
+	client, _ := pipeTunnels(t)
 	ctx := context.Background()
 
 	if err := client.SendDatagram(ctx, []byte("x")); !errors.Is(err, ErrDatagramsUnsupported) {
