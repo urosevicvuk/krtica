@@ -69,18 +69,14 @@ func (s *Server) Run(ctx context.Context) error {
 		lns = append(lns, ln)
 		s.log.Info("public listener up", "route", rt.Name, "addr", ln.Addr().String())
 
-		wg.Add(1)
-		go func(rt config.Route, ln net.Listener) {
-			defer wg.Done()
+		wg.Go(func() {
 			s.acceptPublic(ctx, rt, ln)
-		}(rt, ln)
+		})
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		s.acceptAgents(ctx, agentLn)
-	}()
+	})
 
 	<-ctx.Done()
 	closeAll(lns)
