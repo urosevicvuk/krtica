@@ -12,45 +12,19 @@ import (
 )
 
 var (
-	// ErrClosed is returned by all methods after Close, and by in-flight
-	// calls interrupted by it. Reconnect policy (§3.4) belongs to the
-	// caller, not the tunnel.
 	ErrClosed = errors.New("tunnel: closed")
 
-	// ErrDatagramsUnsupported is returned by SendDatagram and RecvDatagram
-	// on carriers with no unreliable channel (yamux-over-TCP, §8.2);
-	// callers fall back to stream-framed UDP.
 	ErrDatagramsUnsupported = errors.New("tunnel: datagrams unsupported by this carrier")
 )
 
-// Tunnel is one established, authenticated tunnel between agent and
-// server, multiplexing logical streams (§5) and, on capable carriers,
-// unreliable datagrams (§8.2). Constructing one is the concrete
-// carrier's job and happens only after dial, TLS, and auth succeed
-// (§3.4); both peers then hold a Tunnel.
-//
-// Implementations must be safe for concurrent use, must keep stream
-// counts and buffered bytes bounded (P1) — OpenStream fails fast when
-// global caps are hit rather than queueing — and must unblock all
-// pending calls with ErrClosed when the tunnel closes.
 type Tunnel interface {
-	// OpenStream opens a logical stream to the peer, honoring ctx during
-	// setup. It fails fast with ErrClosed on a dead tunnel.
 	OpenStream(ctx context.Context) (net.Conn, error)
 
-	// AcceptStream blocks until the peer opens a stream, ctx is done, or
-	// the tunnel closes.
 	AcceptStream(ctx context.Context) (net.Conn, error)
 
-	// SendDatagram sends one unreliable, unordered message. Payloads over
-	// the carrier's datagram MTU fail; they are never fragmented.
 	SendDatagram(ctx context.Context, p []byte) error
 
-	// RecvDatagram blocks for the next inbound datagram. The returned
-	// slice is owned by the caller.
 	RecvDatagram(ctx context.Context) ([]byte, error)
 
-	// Close tears down the tunnel and all its streams, unblocking pending
-	// calls. It is idempotent.
 	Close() error
 }

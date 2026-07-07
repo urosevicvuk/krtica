@@ -1,5 +1,3 @@
-// Package agent implements the mole (§3): it dials the server, holds the
-// tunnel open, and splices incoming streams to local targets.
 package agent
 
 import (
@@ -22,14 +20,12 @@ const (
 	dialTimeout      = 10 * time.Second
 )
 
-// Agent maintains one tunnel to the server and serves its streams.
 type Agent struct {
 	cfg     *config.Agent
 	log     *slog.Logger
 	targets map[string]string
 }
 
-// New builds an Agent from validated config.
 func New(cfg *config.Agent, log *slog.Logger) *Agent {
 	targets := make(map[string]string, len(cfg.Services))
 	for _, svc := range cfg.Services {
@@ -38,16 +34,10 @@ func New(cfg *config.Agent, log *slog.Logger) *Agent {
 	return &Agent{cfg: cfg, log: log, targets: targets}
 }
 
-// Run dials the server, authenticates, and serves tunnel streams until
-// ctx is canceled or the tunnel drops. Reconnect-with-backoff wraps this
-// in Phase 2 (§3.4); for now a dropped tunnel ends Run.
 func (a *Agent) Run(ctx context.Context) error {
 	dialer := &net.Dialer{Timeout: dialTimeout}
-	// Phase 1 stopgap: the server's certificate is ephemeral self-signed
-	// (see internal/server), so there is no chain to verify yet. The
-	// tunnel is encrypted but the server is unauthenticated; enrollment
-	// (pinning / mTLS / Noise, §20) closes this hole before real use.
-	tlsCfg := &tls.Config{InsecureSkipVerify: true} //nolint:gosec // see above
+
+	tlsCfg := &tls.Config{InsecureSkipVerify: true} 
 	conn, err := tls.DialWithDialer(dialer, "tcp", a.cfg.Server, tlsCfg)
 	if err != nil {
 		return fmt.Errorf("agent: dial server: %w", err)
@@ -78,8 +68,6 @@ func (a *Agent) Run(ctx context.Context) error {
 	}
 }
 
-// handshake sends Hello and waits for the server's verdict, bounded by a
-// deadline covering the whole exchange.
 func (a *Agent) handshake(conn net.Conn) error {
 	if err := conn.SetDeadline(time.Now().Add(handshakeTimeout)); err != nil {
 		return err
@@ -109,8 +97,6 @@ func (a *Agent) handshake(conn net.Conn) error {
 	return nil
 }
 
-// serveStream handles one incoming stream: read which service the server
-// wants, dial the local target, splice.
 func (a *Agent) serveStream(stream net.Conn) {
 	if err := stream.SetReadDeadline(time.Now().Add(handshakeTimeout)); err != nil {
 		_ = stream.Close()

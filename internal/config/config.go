@@ -1,6 +1,3 @@
-// Package config loads and validates krtica's YAML configuration files
-// (Decision #17). Server and agent have separate schemas; SIGHUP
-// hot-reload arrives with the dynamic control plane.
 package config
 
 import (
@@ -11,41 +8,29 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Server configures `krtica server` (the molehill).
 type Server struct {
-	// AgentListen is the address agents dial, e.g. ":7000".
 	AgentListen string `yaml:"agent_listen"`
-	// Token authenticates agents (P8: mandatory, no anonymous tunnels).
 	Token string `yaml:"token"`
-	// Routes maps public listeners to advertised service names.
 	Routes []Route `yaml:"routes"`
 }
 
-// Route is one public-ingress rule: a listen address routed to a service
-// advertised by a connected agent (Decision #19).
 type Route struct {
 	Name   string `yaml:"name"`
 	Listen string `yaml:"listen"`
 }
 
-// Agent configures `krtica agent` (the mole).
 type Agent struct {
-	// Name identifies this agent in logs and, later, the control API.
 	Name string `yaml:"name"`
-	// Server is the molehill's agent-listener address, e.g. "vps:7000".
 	Server string `yaml:"server"`
 	Token  string `yaml:"token"`
-	// Services maps advertised names to local dial targets.
 	Services []Service `yaml:"services"`
 }
 
-// Service is one local target the agent exposes through the tunnel.
 type Service struct {
 	Name   string `yaml:"name"`
 	Target string `yaml:"target"`
 }
 
-// LoadServer reads and validates a server config from path.
 func LoadServer(path string) (*Server, error) {
 	var cfg Server
 	if err := load(path, &cfg); err != nil {
@@ -65,7 +50,6 @@ func LoadServer(path string) (*Server, error) {
 	return &cfg, nil
 }
 
-// LoadAgent reads and validates an agent config from path.
 func LoadAgent(path string) (*Agent, error) {
 	var cfg Agent
 	if err := load(path, &cfg); err != nil {

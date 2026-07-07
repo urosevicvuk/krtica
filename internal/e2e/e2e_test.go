@@ -1,5 +1,3 @@
-// Package e2e proves the full Phase 1 data path: public visitor → server
-// → TLS tunnel → agent → local service, and back.
 package e2e
 
 import (
@@ -18,9 +16,6 @@ import (
 	"github.com/urosevicvuk/krtica/internal/server"
 )
 
-// freePort reserves an ephemeral port and returns it. The listener is
-// closed before use, so a race with other processes is possible but
-// harmless in practice for a local test.
 func freePort(t *testing.T) int {
 	t.Helper()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
@@ -32,8 +27,6 @@ func freePort(t *testing.T) int {
 	return port
 }
 
-// echoServer runs a local TCP service that echoes one line back with a
-// prefix, standing in for the homelab service behind the agent.
 func echoServer(t *testing.T) string {
 	t.Helper()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
@@ -57,8 +50,6 @@ func echoServer(t *testing.T) string {
 	return ln.Addr().String()
 }
 
-// dialRetry dials addr until it answers or the deadline passes, covering
-// the async startup of server listeners and the tunnel.
 func dialRetry(t *testing.T, addr string, timeout time.Duration) net.Conn {
 	t.Helper()
 	deadline := time.Now().Add(timeout)
@@ -102,8 +93,6 @@ func TestTCPTunnelEndToEnd(t *testing.T) {
 	srvDone := make(chan error, 1)
 	go func() { srvDone <- server.New(srvCfg, log).Run(ctx) }()
 
-	// The agent dials as soon as the server listener answers; retry
-	// because Run starts listeners asynchronously from our perspective.
 	agDone := make(chan error, 1)
 	go func() {
 		deadline := time.Now().Add(5 * time.Second)
@@ -117,8 +106,6 @@ func TestTCPTunnelEndToEnd(t *testing.T) {
 		}
 	}()
 
-	// The public port answers immediately; the tunnel behind it needs the
-	// agent registered, so retry the full round trip briefly.
 	deadline := time.Now().Add(5 * time.Second)
 	var got []byte
 	for {
@@ -140,7 +127,6 @@ func TestTCPTunnelEndToEnd(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	// Graceful shutdown: cancel must end both Run loops without hangs.
 	cancel()
 	for _, ch := range []chan error{srvDone, agDone} {
 		select {
@@ -176,7 +162,7 @@ func TestBadTokenRejected(t *testing.T) {
 	for {
 		err := agent.New(agCfg, log).Run(ctx)
 		if err != nil && !isConnRefused(err) {
-			return // rejected by handshake — the assertion
+			return 
 		}
 		if time.Now().After(deadline) {
 			t.Fatalf("agent with bad token was not rejected (last err: %v)", err)
@@ -185,8 +171,6 @@ func TestBadTokenRejected(t *testing.T) {
 	}
 }
 
-// isConnRefused reports whether the dial failed before reaching the
-// handshake (server listener not up yet).
 func isConnRefused(err error) bool {
 	var opErr *net.OpError
 	return errors.As(err, &opErr) && opErr.Op == "dial"

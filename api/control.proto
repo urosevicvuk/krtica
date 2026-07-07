@@ -7,6 +7,11 @@ package krtica.v1;
 
 option go_package = "github.com/urosevicvuk/krtica/internal/wire/pb";
 
+enum StreamKind {
+  STREAM_KIND_UNSPECIFIED = 0;
+  STREAM_KIND_CONTROL = 1;
+  STREAM_KIND_DATA = 2;
+}
 // Hello is the agent's opening message: authenticate and advertise the
 // services this agent can reach locally.
 message Hello {
@@ -26,9 +31,18 @@ message HelloAck {
   string error = 2;
 }
 
-// StreamHeader is written by the server as the first frame on every new
-// data stream, telling the agent which advertised service the public
-// visitor wants.
+// StreamHeader is written by the server as the first frame on every 
+// stream, telling the agent what kind of a stream it is 
 message StreamHeader {
   string service = 1;
+  StreamKind kind = 2;
 }
+
+message Ping {
+  uint64 sequence = 1;
+}
+
+message Pong {
+  uint64 sequence = 1;
+}
+

@@ -23,20 +23,13 @@ import (
 
 const handshakeTimeout = 10 * time.Second
 
-// Server routes public ingress to agent tunnels. One Server owns all
-// listeners; Run blocks until ctx is canceled.
 type Server struct {
 	cfg *config.Server
 	log *slog.Logger
-
 	mu sync.Mutex
-	// backends maps advertised service name → the tunnel of the agent
-	// that advertised it. Phase 1: one backend per service, last agent to
-	// advertise wins; edge LB across duplicates arrives in Phase 3 (§7).
 	backends map[string]tunnel.Tunnel
 }
 
-// New builds a Server from validated config.
 func New(cfg *config.Server, log *slog.Logger) *Server {
 	return &Server{
 		cfg:      cfg,
@@ -45,7 +38,6 @@ func New(cfg *config.Server, log *slog.Logger) *Server {
 	}
 }
 
-// Run listens for agents and public visitors until ctx is canceled.
 func (s *Server) Run(ctx context.Context) error {
 	tlsCfg, err := selfSignedTLS()
 	if err != nil {
@@ -84,8 +76,6 @@ func (s *Server) Run(ctx context.Context) error {
 	return nil
 }
 
-// acceptAgents runs the agent-listener loop: one goroutine per tunnel
-// handshake so a stalled agent cannot block new ones.
 func (s *Server) acceptAgents(ctx context.Context, ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
@@ -100,8 +90,6 @@ func (s *Server) acceptAgents(ctx context.Context, ln net.Listener) {
 	}
 }
 
-// handleAgent authenticates one agent connection and, on success,
-// registers its advertised services and keeps the tunnel until it drops.
 func (s *Server) handleAgent(ctx context.Context, conn net.Conn) {
 	log := s.log.With("remote", conn.RemoteAddr().String())
 
@@ -123,8 +111,6 @@ func (s *Server) handleAgent(ctx context.Context, conn net.Conn) {
 	s.register(hello.Services, tun)
 	log.Info("agent connected", "services", hello.Services)
 
-	// Block until the tunnel dies: the agent opens no streams toward us
-	// in Phase 1, so the first Accept result signals session end.
 	_, err = tun.AcceptStream(ctx)
 	if err != nil && !errors.Is(err, tunnel.ErrClosed) && ctx.Err() == nil {
 		log.Warn("tunnel closed", "err", err)
@@ -134,9 +120,6 @@ func (s *Server) handleAgent(ctx context.Context, conn net.Conn) {
 	log.Info("agent disconnected")
 }
 
-// handshake enforces protocol version and token before any multiplexing
-// starts. The deadline covers the whole exchange so a silent peer cannot
-// hold a goroutine forever (P1).
 func (s *Server) handshake(conn net.Conn) (*pb.Hello, error) {
 	if err := conn.SetDeadline(time.Now().Add(handshakeTimeout)); err != nil {
 		return nil, err
@@ -169,9 +152,6 @@ func (s *Server) register(services []string, tun tunnel.Tunnel) {
 	}
 }
 
-// unregister removes backends only if they still point at tun, so a
-// reconnected agent's fresh registration is never torn down by the old
-// tunnel's cleanup.
 func (s *Server) unregister(services []string, tun tunnel.Tunnel) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -189,7 +169,6 @@ func (s *Server) lookup(service string) (tunnel.Tunnel, bool) {
 	return tun, ok
 }
 
-// acceptPublic accepts visitors on one route's public listener.
 func (s *Server) acceptPublic(ctx context.Context, rt config.Route, ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
@@ -204,8 +183,6 @@ func (s *Server) acceptPublic(ctx context.Context, rt config.Route, ln net.Liste
 	}
 }
 
-// servePublic routes one public connection: find the backend serving the
-// route's service, open a stream, send the header, splice.
 func (s *Server) servePublic(ctx context.Context, rt config.Route, conn net.Conn) {
 	tun, ok := s.lookup(rt.Name)
 	if !ok {

@@ -1,6 +1,3 @@
-// Package wire carries krtica's control-plane messages: protobuf types
-// generated into pb (Decision #18) plus the length-prefixed framing that
-// delimits them on a byte stream.
 package wire
 
 import (
@@ -12,21 +9,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// ProtocolVersion is carried in Hello and bumped on any breaking change
-// to the control messages or framing.
 const ProtocolVersion = 1
 
-// MaxFrameSize bounds a single control frame. Control messages are tiny;
-// anything larger indicates a corrupt or hostile peer (P1: no unbounded
-// allocation driven by remote input).
 const MaxFrameSize = 1 << 20
 
-// ErrFrameTooLarge is returned when a peer announces a frame above
-// MaxFrameSize.
 var ErrFrameTooLarge = errors.New("wire: frame exceeds maximum size")
 
-// WriteFrame marshals msg and writes it as one length-prefixed frame
-// (4-byte big-endian length, then the protobuf bytes).
 func WriteFrame(w io.Writer, msg proto.Message) error {
 	b, err := proto.Marshal(msg)
 	if err != nil {
@@ -46,8 +34,6 @@ func WriteFrame(w io.Writer, msg proto.Message) error {
 	return nil
 }
 
-// ReadFrame reads one length-prefixed frame from r and unmarshals it into
-// msg, rejecting frames above MaxFrameSize before allocating.
 func ReadFrame(r io.Reader, msg proto.Message) error {
 	var hdr [4]byte
 	if _, err := io.ReadFull(r, hdr[:]); err != nil {

@@ -1,5 +1,3 @@
-// Package cli wires krtica's subcommands (Decision #16: single binary,
-// cobra) to the server and agent packages.
 package cli
 
 import (
@@ -13,7 +11,6 @@ import (
 	"github.com/urosevicvuk/krtica/internal/server"
 )
 
-// New builds the root command with all subcommands attached.
 func New() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "krtica",
@@ -59,8 +56,6 @@ func agentCmd() *cobra.Command {
 	return cmd
 }
 
-// logger builds the process-wide logger. Text for the terminal now;
-// structured JSON (§12) once observability lands.
 func logger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(os.Stderr, nil))
 }

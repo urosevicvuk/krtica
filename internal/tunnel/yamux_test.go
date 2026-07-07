@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-// pipeTunnels returns a connected client/server pair over an in-memory
-// pipe, torn down automatically when the test finishes.
 func pipeTunnels(t *testing.T) (client, server *Yamux) {
 	t.Helper()
 	c1, c2 := net.Pipe()
@@ -35,8 +33,6 @@ func TestYamuxStreamRoundTrip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Accept concurrently: it cannot return until the open side's SYN
-	// frame crosses the pipe.
 	type accept struct {
 		conn net.Conn
 		err  error

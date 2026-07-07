@@ -25,6 +25,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type StreamKind int32
+
+const (
+	StreamKind_STREAM_KIND_UNSPECIFIED StreamKind = 0
+	StreamKind_STREAM_KIND_CONTROL     StreamKind = 1
+	StreamKind_STREAM_KIND_DATA        StreamKind = 2
+)
+
+// Enum value maps for StreamKind.
+var (
+	StreamKind_name = map[int32]string{
+		0: "STREAM_KIND_UNSPECIFIED",
+		1: "STREAM_KIND_CONTROL",
+		2: "STREAM_KIND_DATA",
+	}
+	StreamKind_value = map[string]int32{
+		"STREAM_KIND_UNSPECIFIED": 0,
+		"STREAM_KIND_CONTROL":     1,
+		"STREAM_KIND_DATA":        2,
+	}
+)
+
+func (x StreamKind) Enum() *StreamKind {
+	p := new(StreamKind)
+	*p = x
+	return p
+}
+
+func (x StreamKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (StreamKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_control_proto_enumTypes[0].Descriptor()
+}
+
+func (StreamKind) Type() protoreflect.EnumType {
+	return &file_api_control_proto_enumTypes[0]
+}
+
+func (x StreamKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use StreamKind.Descriptor instead.
+func (StreamKind) EnumDescriptor() ([]byte, []int) {
+	return file_api_control_proto_rawDescGZIP(), []int{0}
+}
+
 // Hello is the agent's opening message: authenticate and advertise the
 // services this agent can reach locally.
 type Hello struct {
@@ -152,12 +201,12 @@ func (x *HelloAck) GetError() string {
 	return ""
 }
 
-// StreamHeader is written by the server as the first frame on every new
-// data stream, telling the agent which advertised service the public
-// visitor wants.
+// StreamHeader is written by the server as the first frame on every
+// stream, telling the agent what kind of a stream it is
 type StreamHeader struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Service       string                 `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
+	Kind          StreamKind             `protobuf:"varint,2,opt,name=kind,proto3,enum=krtica.v1.StreamKind" json:"kind,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -199,6 +248,101 @@ func (x *StreamHeader) GetService() string {
 	return ""
 }
 
+func (x *StreamHeader) GetKind() StreamKind {
+	if x != nil {
+		return x.Kind
+	}
+	return StreamKind_STREAM_KIND_UNSPECIFIED
+}
+
+type Ping struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sequence      uint64                 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Ping) Reset() {
+	*x = Ping{}
+	mi := &file_api_control_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Ping) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Ping) ProtoMessage() {}
+
+func (x *Ping) ProtoReflect() protoreflect.Message {
+	mi := &file_api_control_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Ping.ProtoReflect.Descriptor instead.
+func (*Ping) Descriptor() ([]byte, []int) {
+	return file_api_control_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Ping) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+type Pong struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sequence      uint64                 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Pong) Reset() {
+	*x = Pong{}
+	mi := &file_api_control_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Pong) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Pong) ProtoMessage() {}
+
+func (x *Pong) ProtoReflect() protoreflect.Message {
+	mi := &file_api_control_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Pong.ProtoReflect.Descriptor instead.
+func (*Pong) Descriptor() ([]byte, []int) {
+	return file_api_control_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Pong) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
 var File_api_control_proto protoreflect.FileDescriptor
 
 const file_api_control_proto_rawDesc = "" +
@@ -212,9 +356,19 @@ const file_api_control_proto_rawDesc = "" +
 	"\bservices\x18\x04 \x03(\tR\bservices\"0\n" +
 	"\bHelloAck\x12\x0e\n" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05error\"(\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"S\n" +
 	"\fStreamHeader\x12\x18\n" +
-	"\aservice\x18\x01 \x01(\tR\aserviceB0Z.github.com/urosevicvuk/krtica/internal/wire/pbb\x06proto3"
+	"\aservice\x18\x01 \x01(\tR\aservice\x12)\n" +
+	"\x04kind\x18\x02 \x01(\x0e2\x15.krtica.v1.StreamKindR\x04kind\"\"\n" +
+	"\x04Ping\x12\x1a\n" +
+	"\bsequence\x18\x01 \x01(\x04R\bsequence\"\"\n" +
+	"\x04Pong\x12\x1a\n" +
+	"\bsequence\x18\x01 \x01(\x04R\bsequence*X\n" +
+	"\n" +
+	"StreamKind\x12\x1b\n" +
+	"\x17STREAM_KIND_UNSPECIFIED\x10\x00\x12\x17\n" +
+	"\x13STREAM_KIND_CONTROL\x10\x01\x12\x14\n" +
+	"\x10STREAM_KIND_DATA\x10\x02B0Z.github.com/urosevicvuk/krtica/internal/wire/pbb\x06proto3"
 
 var (
 	file_api_control_proto_rawDescOnce sync.Once
@@ -228,18 +382,23 @@ func file_api_control_proto_rawDescGZIP() []byte {
 	return file_api_control_proto_rawDescData
 }
 
-var file_api_control_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_api_control_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_api_control_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_api_control_proto_goTypes = []any{
-	(*Hello)(nil),        // 0: krtica.v1.Hello
-	(*HelloAck)(nil),     // 1: krtica.v1.HelloAck
-	(*StreamHeader)(nil), // 2: krtica.v1.StreamHeader
+	(StreamKind)(0),      // 0: krtica.v1.StreamKind
+	(*Hello)(nil),        // 1: krtica.v1.Hello
+	(*HelloAck)(nil),     // 2: krtica.v1.HelloAck
+	(*StreamHeader)(nil), // 3: krtica.v1.StreamHeader
+	(*Ping)(nil),         // 4: krtica.v1.Ping
+	(*Pong)(nil),         // 5: krtica.v1.Pong
 }
 var file_api_control_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: krtica.v1.StreamHeader.kind:type_name -> krtica.v1.StreamKind
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_api_control_proto_init() }
@@ -252,13 +411,14 @@ func file_api_control_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_control_proto_rawDesc), len(file_api_control_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   3,
+			NumEnums:      1,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_api_control_proto_goTypes,
 		DependencyIndexes: file_api_control_proto_depIdxs,
+		EnumInfos:         file_api_control_proto_enumTypes,
 		MessageInfos:      file_api_control_proto_msgTypes,
 	}.Build()
 	File_api_control_proto = out.File

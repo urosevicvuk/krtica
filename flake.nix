@@ -1,5 +1,5 @@
 {
-  description = "krtica — self-hosted, k8s-native reverse tunnel (Serbian: mole)";
+  description = "krtica - self-hosted, k8s-native reverse tunnel (Serbian: mole)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -18,18 +18,21 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           packages = with pkgs; [
-            go # compiler + the `go` CLI (build/test/vet/mod/...)
-            gopls # LSP server for your editor
-            gotools # goimports, stringer, etc.
-            go-tools # staticcheck
-            golangci-lint # meta-linter, CI gate (roadmap Phase 0)
-            gofumpt # stricter gofmt (roadmap Phase 0)
-            delve # debugger (dlv)
-            protobuf # protoc — control-stream + control-API messages (Decision #18)
-            protols # proto LSP server
-            protoc-gen-go # protobuf → Go codegen
-            protoc-gen-go-grpc # gRPC service stubs (control API, Phase 3)
-            go-task # task runner (Taskfile.yml); `task check` = pre-commit gate
+            go 
+            gopls 
+            gotools 
+            go-tools 
+            golangci-lint 
+            gofumpt 
+
+            delve 
+
+            protobuf 
+            protols 
+            protoc-gen-go 
+            protoc-gen-go-grpc 
+
+            go-task 
           ];
         };
       });

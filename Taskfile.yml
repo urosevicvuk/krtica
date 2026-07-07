@@ -1,5 +1,3 @@
-# Task runner (go-task). `task --list` shows this menu; `task check` is
-# the pre-commit gate and mirrors what CI runs.
 version: "3"
 
 tasks:

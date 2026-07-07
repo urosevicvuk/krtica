@@ -1,6 +1,5 @@
-# krtica server (the molehill) — runs on the machine with a public IP.
-agent_listen: "127.0.0.1:7000" # agents dial here (use :7000 on a real VPS)
+agent_listen: "127.0.0.1:7000" 
 token: "change-me"
 routes:
-  - name: web # must match a service name an agent advertises
-    listen: "127.0.0.1:8080" # public visitors connect here
+  - name: web 
+    listen: "127.0.0.1:8080" 

@@ -12,12 +12,6 @@ import (
 	"time"
 )
 
-// selfSignedTLS builds a fresh, ephemeral server certificate at startup.
-//
-// Phase 1 stopgap: it encrypts the tunnel (P8) but gives agents nothing
-// to verify, so the agent currently skips chain verification. Proper
-// server identity (pinning, mTLS bootstrap, or Noise — §20) replaces this
-// before krtica leaves the lab.
 func selfSignedTLS() (*tls.Config, error) {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
