@@ -32,7 +32,8 @@ study of the ideas they pioneered - with gratitude, not as a competitor:
   on the same idea; a lovely study in doing a lot with a little.
 - **[ngrok](https://ngrok.com)** - the polished gold standard for developer
   ergonomics.
-- **[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)** - excellent and free for HTTP/HTTPS exposure. I just want to have more control
+- **[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)** -
+  excellent and free for HTTP/HTTPS exposure. I just want to have more control
   over it, hence why I'm building my own.
 - **[Tailscale](https://tailscale.com)** - the reference for private, key-based
   mesh networking (WireGuard under the hood).
@@ -82,6 +83,10 @@ As the project grows, we could delete some of the things from here and actually
 implement them, but not in near future at least.
 
 ## Quick start
+
+> This is the desired behaviour, not the actual one. Right now you can only run
+> the agent and the server, everything else will be added as devlopment
+> continues.
 
 On the VPS (the molehill):
 
