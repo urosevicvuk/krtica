@@ -8,17 +8,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Server configuration
 type Server struct {
 	AgentListen string  `yaml:"agent_listen"`
 	Token       string  `yaml:"token"`
 	Routes      []Route `yaml:"routes"`
 }
 
+// Route configuration
 type Route struct {
 	Name   string `yaml:"name"`
 	Listen string `yaml:"listen"`
 }
 
+// Agent configuration
 type Agent struct {
 	Name     string    `yaml:"name"`
 	Server   string    `yaml:"server"`
@@ -26,11 +29,13 @@ type Agent struct {
 	Services []Service `yaml:"services"`
 }
 
+// Service configuration
 type Service struct {
 	Name   string `yaml:"name"`
 	Target string `yaml:"target"`
 }
 
+// LoadServer loads a server configuration from a file path
 func LoadServer(path string) (*Server, error) {
 	var cfg Server
 	if err := load(path, &cfg); err != nil {
@@ -50,6 +55,7 @@ func LoadServer(path string) (*Server, error) {
 	return &cfg, nil
 }
 
+// LoadAgent loads an agent configuration from a file path
 func LoadAgent(path string) (*Agent, error) {
 	var cfg Agent
 	if err := load(path, &cfg); err != nil {
@@ -72,6 +78,7 @@ func LoadAgent(path string) (*Agent, error) {
 	return &cfg, nil
 }
 
+// load loads a configuration from a file path
 func load(path string, out any) error {
 	b, err := os.ReadFile(path)
 	if err != nil {

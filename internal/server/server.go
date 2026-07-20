@@ -20,6 +20,7 @@ import (
 
 const handshakeTimeout = 10 * time.Second
 
+// Server is a public-facing molehill
 type Server struct {
 	cfg      *config.Server
 	log      *slog.Logger
@@ -27,6 +28,7 @@ type Server struct {
 	backends map[string]tunnel.Tunnel
 }
 
+// New creates a new Server
 func New(cfg *config.Server, log *slog.Logger) *Server {
 	return &Server{
 		cfg:      cfg,
@@ -35,6 +37,7 @@ func New(cfg *config.Server, log *slog.Logger) *Server {
 	}
 }
 
+// Run runs the server
 func (s *Server) Run(ctx context.Context) error {
 	tlsCfg, err := selfSignedTLS()
 	if err != nil {
@@ -73,6 +76,7 @@ func (s *Server) Run(ctx context.Context) error {
 	return nil
 }
 
+// Accepts agent connections
 func (s *Server) acceptAgents(ctx context.Context, ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
@@ -87,6 +91,7 @@ func (s *Server) acceptAgents(ctx context.Context, ln net.Listener) {
 	}
 }
 
+// Handles an agent connection
 func (s *Server) handleAgent(ctx context.Context, conn net.Conn) {
 	log := s.log.With("remote", conn.RemoteAddr().String())
 
@@ -117,6 +122,7 @@ func (s *Server) handleAgent(ctx context.Context, conn net.Conn) {
 	log.Info("agent disconnected")
 }
 
+// Performs the handshake with the agent
 func (s *Server) handshake(conn net.Conn) (*pb.Hello, error) {
 	if err := conn.SetDeadline(time.Now().Add(handshakeTimeout)); err != nil {
 		return nil, err
@@ -141,6 +147,7 @@ func (s *Server) handshake(conn net.Conn) (*pb.Hello, error) {
 	return &hello, nil
 }
 
+// Registers a tunnel for a list of services
 func (s *Server) register(services []string, tun tunnel.Tunnel) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -149,6 +156,7 @@ func (s *Server) register(services []string, tun tunnel.Tunnel) {
 	}
 }
 
+// Unregisters a tunnel for a list of services
 func (s *Server) unregister(services []string, tun tunnel.Tunnel) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -159,6 +167,7 @@ func (s *Server) unregister(services []string, tun tunnel.Tunnel) {
 	}
 }
 
+// Looks up a tunnel for a service
 func (s *Server) lookup(service string) (tunnel.Tunnel, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -166,6 +175,7 @@ func (s *Server) lookup(service string) (tunnel.Tunnel, bool) {
 	return tun, ok
 }
 
+// Accepts public connections
 func (s *Server) acceptPublic(ctx context.Context, rt config.Route, ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
@@ -180,6 +190,7 @@ func (s *Server) acceptPublic(ctx context.Context, rt config.Route, ln net.Liste
 	}
 }
 
+// Serves a public connection
 func (s *Server) servePublic(ctx context.Context, rt config.Route, conn net.Conn) {
 	tun, ok := s.lookup(rt.Name)
 	if !ok {
@@ -202,6 +213,7 @@ func (s *Server) servePublic(ctx context.Context, rt config.Route, conn net.Conn
 	forward.Splice(conn, stream)
 }
 
+// Closes all listeners
 func closeAll(lns []net.Listener) {
 	for _, ln := range lns {
 		_ = ln.Close()

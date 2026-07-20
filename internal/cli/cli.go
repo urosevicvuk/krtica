@@ -11,6 +11,7 @@ import (
 	"github.com/urosevicvuk/krtica/internal/server"
 )
 
+// New creates the root command
 func New() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "krtica",
@@ -22,6 +23,7 @@ func New() *cobra.Command {
 	return root
 }
 
+// serverCmd creates the server command
 func serverCmd() *cobra.Command {
 	var cfgPath string
 	cmd := &cobra.Command{
@@ -39,6 +41,7 @@ func serverCmd() *cobra.Command {
 	return cmd
 }
 
+// agentCmd creates the agent command
 func agentCmd() *cobra.Command {
 	var cfgPath string
 	cmd := &cobra.Command{
@@ -56,6 +59,7 @@ func agentCmd() *cobra.Command {
 	return cmd
 }
 
+// logger creates a logger
 func logger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(os.Stderr, nil))
 }

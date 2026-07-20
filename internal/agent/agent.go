@@ -20,12 +20,14 @@ const (
 	dialTimeout      = 10 * time.Second
 )
 
+// Agent is a client of the krtica server
 type Agent struct {
 	cfg     *config.Agent
 	log     *slog.Logger
 	targets map[string]string
 }
 
+// New creates a new Agent from a config
 func New(cfg *config.Agent, log *slog.Logger) *Agent {
 	targets := make(map[string]string, len(cfg.Services))
 	for _, svc := range cfg.Services {
@@ -34,6 +36,7 @@ func New(cfg *config.Agent, log *slog.Logger) *Agent {
 	return &Agent{cfg: cfg, log: log, targets: targets}
 }
 
+// Run runs the agent
 func (a *Agent) Run(ctx context.Context) error {
 	dialer := &net.Dialer{Timeout: dialTimeout}
 
@@ -68,6 +71,7 @@ func (a *Agent) Run(ctx context.Context) error {
 	}
 }
 
+// handshake performs the handshake with the server
 func (a *Agent) handshake(conn net.Conn) error {
 	if err := conn.SetDeadline(time.Now().Add(handshakeTimeout)); err != nil {
 		return err
@@ -97,6 +101,7 @@ func (a *Agent) handshake(conn net.Conn) error {
 	return nil
 }
 
+// serveStream serves a single stream
 func (a *Agent) serveStream(stream net.Conn) {
 	if err := stream.SetReadDeadline(time.Now().Add(handshakeTimeout)); err != nil {
 		_ = stream.Close()

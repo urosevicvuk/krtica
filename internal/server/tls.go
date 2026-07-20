@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// Generates a self-signed TLS config
 func selfSignedTLS() (*tls.Config, error) {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {

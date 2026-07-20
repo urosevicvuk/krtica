@@ -6,10 +6,12 @@ import (
 	"sync"
 )
 
+// halfCloser is a net.Conn that can be half-closed
 type halfCloser interface {
 	CloseWrite() error
 }
 
+// Splice splices two net.Conns
 func Splice(a, b net.Conn) {
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -20,6 +22,7 @@ func Splice(a, b net.Conn) {
 	_ = b.Close()
 }
 
+// cp copies data between two net.Conns
 func cp(wg *sync.WaitGroup, dst, src net.Conn) {
 	defer wg.Done()
 	_, _ = io.Copy(dst, src)

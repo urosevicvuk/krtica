@@ -9,12 +9,16 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// ProtocolVersion is the wire protocol version
 const ProtocolVersion = 1
 
+// MaxFrameSize is the maximum frame size
 const MaxFrameSize = 1 << 20
 
+// ErrFrameTooLarge is returned when a frame is too large
 var ErrFrameTooLarge = errors.New("wire: frame exceeds maximum size")
 
+// WriteFrame writes a frame to a writer
 func WriteFrame(w io.Writer, msg proto.Message) error {
 	b, err := proto.Marshal(msg)
 	if err != nil {
@@ -34,6 +38,7 @@ func WriteFrame(w io.Writer, msg proto.Message) error {
 	return nil
 }
 
+// ReadFrame reads a frame from a reader
 func ReadFrame(r io.Reader, msg proto.Message) error {
 	var hdr [4]byte
 	if _, err := io.ReadFull(r, hdr[:]); err != nil {
