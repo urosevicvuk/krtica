@@ -1,6 +1,3 @@
-// Package server implements the molehill (§3): it accepts agent tunnels
-// on one listener and public visitors on the others, routing each public
-// connection down the right tunnel as a fresh stream.
 package server
 
 import (

@@ -1,6 +1,3 @@
-// Control-plane messages exchanged over the tunnel (Decision #18).
-// The handshake (Hello/HelloAck) runs on the raw TLS connection before
-// multiplexing starts; StreamHeader opens every data stream.
 syntax = "proto3";
 
 package krtica.v1;
@@ -12,27 +9,18 @@ enum StreamKind {
   STREAM_KIND_CONTROL = 1;
   STREAM_KIND_DATA = 2;
 }
-// Hello is the agent's opening message: authenticate and advertise the
-// services this agent can reach locally.
 message Hello {
-  // protocol_version guards against incompatible peers; bump on any
-  // breaking change to these messages or the framing.
   uint32 protocol_version = 1;
   string agent_name = 2;
   string token = 3;
-  // services the agent advertises, by name (targets stay agent-local).
   repeated string services = 4;
 }
 
-// HelloAck accepts or rejects the agent. On rejection the server closes
-// the connection immediately after writing this.
 message HelloAck {
   bool ok = 1;
   string error = 2;
 }
 
-// StreamHeader is written by the server as the first frame on every 
-// stream, telling the agent what kind of a stream it is 
 message StreamHeader {
   string service = 1;
   StreamKind kind = 2;
