@@ -23,19 +23,18 @@ Before you pull this and run it on anything serious, please keep in mind that
 the reverse-tunnel space is full of excellent, mature tools, and krtica is a
 study of the ideas they pioneered - with gratitude, not as a competitor:
 
-- **[frp](https://github.com/fatedier/frp)** — the one krtica learns from most
+- **[frp](https://github.com/fatedier/frp)** - the one krtica learns from most
   directly. Comprehensive, battle-tested, ~90k stars, and does far more than
   this project ever will (P2P/xtcp, KCP, bandwidth limits, port reuse, server
   plugins, HTTP vhosting, dashboards). If you need a real tunnel, reach for frp
   first.
-- **[rathole](https://github.com/rathole-org/rathole)** — a lean, fast Rust take
+- **[rathole](https://github.com/rathole-org/rathole)** - a lean, fast Rust take
   on the same idea; a lovely study in doing a lot with a little.
-- **[ngrok](https://ngrok.com)** — the polished gold standard for developer
+- **[ngrok](https://ngrok.com)** - the polished gold standard for developer
   ergonomics.
-- **[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)**
-  — excellent and free for HTTP/HTTPS exposure. I just want to have more control
+- **[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)** - excellent and free for HTTP/HTTPS exposure. I just want to have more control
   over it, hence why I'm building my own.
-- **[Tailscale](https://tailscale.com)** — the reference for private, key-based
+- **[Tailscale](https://tailscale.com)** - the reference for private, key-based
   mesh networking (WireGuard under the hood).
 
 If you need a tunnel in production, use one of those. krtica exists so I can
