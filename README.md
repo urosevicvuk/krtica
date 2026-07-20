@@ -1,90 +1,146 @@
 # krtica
 
-**krtica** (Serbian: *mole*) is a self-hosted reverse tunnel that exposes
-services behind NAT/CGNAT to the public internet, built from scratch in Go.
+> Still in early development, work in progress.
 
-A mole digs its tunnel *outward*, from underground to the surface — which is
+**krtica** (Serbian: _mole_) is a self-hosted reverse tunnel that exposes
+services behind NAT/CGNAT to the public internet, built from scratch in Go. It
+is a **learning project** (for now?) - a way to understand reverse tunnels, Go,
+and network programming by building one end to end, not by reading about it.
+
+A mole digs its tunnel _outward_, from underground to the surface - which is
 exactly the topology: an agent behind NAT dials an outbound connection to a
-public server, and public traffic flows back down that tunnel to your
-services. No opened router ports, works behind CGNAT.
+public server, and public traffic flows back down that tunnel to your services.
+No opened router ports, works behind CGNAT.
 
-> **Status: early development.** Pre-v1; the design is settled
-> ([docs/DESIGN.md](docs/DESIGN.md)), the code is being built phase by phase.
-> Nothing is usable yet.
+## Why this exists
 
-## Why another tunnel?
+To learn. I wanted to understand by building it, how a reverse tunnel actually
+works: multiplexing many connections over one, carrying UDP sensibly, staying up
+across drops, terminating TLS at an edge, getting better at Go and wiring it all
+into Kubernetes.
 
-In one sentence: *a modern, Kubernetes-native reverse tunnel that stays up
-under real load, does UDP properly, and treats tunnels as declarative
-objects.* Every incumbent leaves a gap:
+Before you pull this and run it on anything serious, please keep in mind that
+the reverse-tunnel space is full of excellent, mature tools, and krtica is a
+study of the ideas they pioneered - with gratitude, not as a competitor:
 
-- **frp** — comprehensive, but documented stability trouble under heavy load.
-- **rathole** — fast and lean, but semi-abandoned since 2023 with its HTTP
-  control API permanently WIP.
-- **ngrok** — polished but proprietary, bandwidth-capped, and still no UDP.
-- **Cloudflare Tunnel** — excellent, and HTTP/HTTPS-centric by design.
-- **Tailscale** — a private mesh, not public exposure.
+- **[frp](https://github.com/fatedier/frp)** — the one krtica learns from most
+  directly. Comprehensive, battle-tested, ~90k stars, and does far more than
+  this project ever will (P2P/xtcp, KCP, bandwidth limits, port reuse, server
+  plugins, HTTP vhosting, dashboards). If you need a real tunnel, reach for frp
+  first.
+- **[rathole](https://github.com/rathole-org/rathole)** — a lean, fast Rust take
+  on the same idea; a lovely study in doing a lot with a little.
+- **[ngrok](https://ngrok.com)** — the polished gold standard for developer
+  ergonomics.
+- **[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)**
+  — excellent and free for HTTP/HTTPS exposure. I just want to have more control
+  over it, hence why I'm building my own.
+- **[Tailscale](https://tailscale.com)** — the reference for private, key-based
+  mesh networking (WireGuard under the hood).
 
-krtica targets the intersection none of them own: **stable under load** +
-**UDP with real datagram semantics** (QUIC datagrams, not UDP-taxed-over-TCP)
-+ **a first-class dynamic control API (gRPC/REST)** + **tunnels as
-Kubernetes/GitOps objects** — self-hosted and protocol-agnostic.
+If you need a tunnel in production, use one of those. krtica exists so I can
+experiment and learn, if this project matures, I'd be happy to suggest it when
+the time comes.
 
 ## How it works
 
 ```
-        PUBLIC INTERNET
-              │
-      ┌───────▼──────────────────────┐
-      │  krtica-server (the molehill)│  VPS with a public IP:
-      │  listeners · router · edge LB│  routes ingress down the
-      │  TLS edge · control API      │  right tunnel
-      └───────▲──────────────────────┘
-              │ ONE persistent, multiplexed,
-              │ encrypted tunnel — dug outward
-      ┌───────┴──────────────────────┐
-      │  krtica-agent (the mole)     │  behind NAT/CGNAT:
-      │  dials out · demuxes streams │  splices streams to
-      │  → local targets             │  local services
-      └──────────────────────────────┘
+  PUBLIC INTERNET
+        │
+┌───────▼─────────────────────────┐
+│  krtica-server (the molehill)   │  
+│  listeners, router, edge LB,    │  
+│  TLS edge, control API          │ 
+└───────▲─────────────────────────┘
+        │ ONE persistent, multiplexed,
+        │ encrypted tunnel — dug outward
+┌───────┴─────────────────────────┐
+│  krtica-agent (the mole)        │  
+│  dials out, demuxes streams,    │ 
+│  splices to local targets       │  
+└─────────────────────────────────┘
 ```
 
-## What krtica will never be
+## Scope — what it deliberately leaves out
 
-Deliberate non-goals, so the lane stays sharp:
+To stay small and understandable, krtica does one job: arbitrary-protocol public
+exposure and skips things other tools do well. These aren't criticisms of those
+tools; they're just outside what this project is for:
 
-- **HTTP-only** — that's Cloudflare Tunnel. krtica is arbitrary protocols;
-  L7 is a mode, never the identity.
-- **A private mesh / overlay VPN** — that's Tailscale. krtica is public
-  exposure.
-- **An in-cluster load balancer** — that's Cilium/Envoy. krtica balances
-  across tunnel endpoints at the edge only.
-- **A full API gateway** — no auth/rate-limit/transform pipeline; light
-  access control is the ceiling.
-- **P2P / NAT hole-punching** — server-relayed only.
-- **A hosted multi-tenant SaaS** — self-hosted, single-tenant.
+- **HTTP-specific features** (virtual hosting, path rewriting, request
+  pipelines) - frp's HTTP mode and Cloudflare Tunnel do this well.
+- **Private mesh / overlay VPN** - that's Tailscale/WireGuard's job.
+- **P2P / NAT hole-punching** - krtica is server-relayed only; frp's `xtcp`
+  covers the P2P case.
+- **In-cluster pod load balancing** - that's Cilium/Envoy; krtica only balances
+  across tunnel endpoints at the edge.
+- **A hosted multi-tenant SaaS** - self-hosted and single-tenant by design,
+  maybe in the future I'll add a managed hosting option when this matures, but
+  you will always be able to use this repo and self-host it on your own
+  hardware.
 
-## Roadmap
+As the project grows, we could delete some of the things from here and actually
+implement them, but not in near future at least.
 
-| Phase | Delivers | Milestone |
-|---|---|---|
-| 0 | Recon, scaffold, `Tunnel` carrier seam, CI | done |
-| 1 | Core TCP tunnel: TLS, token auth, yamux | one homelab TCP port exposed publicly |
-| 2 | Robustness + UDP + PROXY protocol | survives connection storms; forwards UDP |
-| 3 | Dynamic control API, multi-service, edge LB | add/remove routes live, failover across agents |
-| 4 | L7: SNI routing, ACME auto-TLS, access control | many HTTPS services sharing :443 |
-| 5 | `Tunnel` CRD, QUIC transport, observability | tunnels as GitOps objects, visible in Grafana |
+## Quick start
+
+On the VPS (the molehill):
+
+```sh
+krtica server -c server.yaml
+```
+
+```yaml
+# server.yaml
+agent_listen: "0.0.0.0:7000"
+token: "generate-something-long"
+routes:
+    - name: ssh
+      listen: "0.0.0.0:2222"
+    - name: dns
+      listen: "0.0.0.0:5353"
+      protocol: udp
+```
+
+In the homelab (the mole):
+
+```sh
+krtica agent -c agent.yaml
+```
+
+```yaml
+# agent.yaml
+name: homelab
+server: "vps.example.dev:7000"
+token: "generate-something-long"
+services:
+    - name: ssh
+      target: "192.168.1.10:22"
+    - name: dns
+      target: "192.168.1.53:53"
+```
+
+Manage it live - no restarts:
+
+```sh
+krtica route add --name game --listen :25565 --token ...
+krtica route list --token ...
+krtica agents --token ...
+krtica watch --token ...
+```
+
+See [config-examples/](config-examples/) for every knob (QUIC transport, L7/SNI
+routes, ACME, allowlists, mTLS, limits, metrics)
+
+See [deploy/k8s/](deploy/k8s/) for the `Tunnel` CRD + in-cluster agent.
 
 ## Development
 
 NixOS-friendly: the flake pins the entire toolchain.
 
 ```sh
-nix develop          # or `direnv allow` once
+nix develop          # or `direnv allow` once if you use it
 task --list          # all dev commands (Taskfile.yml)
-task check           # fmt + lint + race tests — the pre-commit gate
+task check           # fmt + lint + race tests - the pre-commit gate
 task build           # binary → bin/krtica
 ```
-
-Design questions are settled in [docs/DESIGN.md](docs/DESIGN.md) before they
-are settled in code.
