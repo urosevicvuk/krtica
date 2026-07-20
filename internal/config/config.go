@@ -9,9 +9,9 @@ import (
 )
 
 type Server struct {
-	AgentListen string `yaml:"agent_listen"`
-	Token string `yaml:"token"`
-	Routes []Route `yaml:"routes"`
+	AgentListen string  `yaml:"agent_listen"`
+	Token       string  `yaml:"token"`
+	Routes      []Route `yaml:"routes"`
 }
 
 type Route struct {
@@ -20,9 +20,9 @@ type Route struct {
 }
 
 type Agent struct {
-	Name string `yaml:"name"`
-	Server string `yaml:"server"`
-	Token  string `yaml:"token"`
+	Name     string    `yaml:"name"`
+	Server   string    `yaml:"server"`
+	Token    string    `yaml:"token"`
 	Services []Service `yaml:"services"`
 }
 

@@ -162,7 +162,7 @@ func TestBadTokenRejected(t *testing.T) {
 	for {
 		err := agent.New(agCfg, log).Run(ctx)
 		if err != nil && !isConnRefused(err) {
-			return 
+			return
 		}
 		if time.Now().After(deadline) {
 			t.Fatalf("agent with bad token was not rejected (last err: %v)", err)

@@ -21,9 +21,9 @@ import (
 const handshakeTimeout = 10 * time.Second
 
 type Server struct {
-	cfg *config.Server
-	log *slog.Logger
-	mu sync.Mutex
+	cfg      *config.Server
+	log      *slog.Logger
+	mu       sync.Mutex
 	backends map[string]tunnel.Tunnel
 }
 

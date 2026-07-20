@@ -37,7 +37,7 @@ func New(cfg *config.Agent, log *slog.Logger) *Agent {
 func (a *Agent) Run(ctx context.Context) error {
 	dialer := &net.Dialer{Timeout: dialTimeout}
 
-	tlsCfg := &tls.Config{InsecureSkipVerify: true} 
+	tlsCfg := &tls.Config{InsecureSkipVerify: true}
 	conn, err := tls.DialWithDialer(dialer, "tcp", a.cfg.Server, tlsCfg)
 	if err != nil {
 		return fmt.Errorf("agent: dial server: %w", err)
