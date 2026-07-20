@@ -53,7 +53,7 @@ the time comes.
 │  TLS edge, control API          │ 
 └───────▲─────────────────────────┘
         │ ONE persistent, multiplexed,
-        │ encrypted tunnel — dug outward
+        │ encrypted tunnel - dug outward
 ┌───────┴─────────────────────────┐
 │  krtica-agent (the mole)        │  
 │  dials out, demuxes streams,    │ 
@@ -61,7 +61,7 @@ the time comes.
 └─────────────────────────────────┘
 ```
 
-## Scope — what it deliberately leaves out
+## Scope - what it deliberately leaves out
 
 To stay small and understandable, krtica does one job: arbitrary-protocol public
 exposure and skips things other tools do well. These aren't criticisms of those
@@ -141,6 +141,4 @@ NixOS-friendly: the flake pins the entire toolchain.
 ```sh
 nix develop          # or `direnv allow` once if you use it
 task --list          # all dev commands (Taskfile.yml)
-task check           # fmt + lint + race tests - the pre-commit gate
-task build           # binary → bin/krtica
 ```
